@@ -1,0 +1,42 @@
+inputbox 'TACACS Username' 'Login'
+TAUsername = inputstr
+passwordbox 'TACACS Password' 'Login'
+TAPassword = inputstr
+UsernamePrompt = 'Username:'
+PasswordPrompt = 'Password:'
+inputbox 'show' 'Enter the show command to be sent'
+command = inputstr
+sprintf2 showcmd 'show %s' command
+setdir 'c:\users\%USER%\%DESKTOP%\'
+foldercreate 'Prometheus'
+setdir 'Prometheus\'
+getdir directory
+
+connect '10.0.1.18'
+;Username = 
+gethostname hostname
+sprintf2 filename '%s\%s_%s.log' directory hostname showcmd
+logopen filename 0 0
+wait UsernamePrompt PasswordPrompt
+if result = 1 then
+sendln Username
+wait PasswordPrompt
+sendln Password
+elseif result = 2 then
+sendln '<Enter Password Here>'
+wait '>' '#' 'Authentication failed'
+sendln 'enable'
+wait PasswordPrompt
+sendln '<Enter Password Here>'
+endif
+wait '>' '#' 'Authentication failed'
+sendln showcmd
+do
+wait '--More--' '#'
+if result = 1 then
+sendln ' '
+elseif result = 2 then
+logwrite 'Success'
+endif
+loop while result = 1
+closett
